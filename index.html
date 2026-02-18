@@ -3,11 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Goal Reward App</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4a90e2">
-
+<title>Goal Reward PWA</title>
+<link rel="manifest" id="manifestPlaceholder">
 <style>
 body{font-family:sans-serif;margin:0;background:#f2f4f8}
 .hidden{display:none}
@@ -23,17 +20,16 @@ button{border:none;border-radius:8px;padding:6px 10px;margin-left:6px}
 .fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:#4a90e2;color:#fff;font-size:28px}
 .progress{height:10px;background:#ddd;border-radius:6px;margin-top:6px}
 .progress-bar{height:10px;background:#4a90e2;border-radius:6px;width:0%}
-.progress-text{font-size:12px;margin-top:4px}
 input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc}
 .goal-left{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dot{color:#e74c3c;font-size:18px}
 .redeemed{opacity:0.6;text-decoration:line-through}
-.top-row{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+.top-buttons{margin-top:6px}
 </style>
 </head>
-
 <body>
 
+<!-- 登入頁 -->
 <div id="loginPage" class="container">
 <h2>登入 / 註冊</h2>
 <input id="username" placeholder="帳號">
@@ -42,34 +38,36 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #c
 <button onclick="register()">註冊</button>
 </div>
 
+<!-- App 主頁 -->
 <div id="appPage" class="hidden">
 <div class="header">
-  <div class="top-row">
-    <div id="userInfo"></div>
-    <button onclick="resetAccount()">重設</button>
-    <button onclick="logout()">登出</button>
-  </div>
-  <div class="progress"><div id="levelBar" class="progress-bar"></div></div>
-  <div id="levelPercent" class="progress-text"></div>
+<div id="userInfo"></div>
+<div class="progress"><div id="levelBar" class="progress-bar"></div></div>
+<div class="top-buttons">
+<button onclick="resetAccount()">重設</button>
+<button onclick="showLogin()">登入</button>
+<button onclick="logout()">登出</button>
+</div>
 </div>
 
 <div class="tabs">
-  <div id="goalTab" class="tab active" onclick="showTab('goal')">目標</div>
-  <div id="rewardTab" class="tab" onclick="showTab('reward')">獎勵</div>
+<div id="goalTab" class="tab active" onclick="showTab('goal')">目標</div>
+<div id="rewardTab" class="tab" onclick="showTab('reward')">獎勵</div>
 </div>
 
+<!-- 目標區 -->
 <div id="goalSection" class="container"></div>
+<div id="goalCompletedSection" class="container hidden"></div>
+<button onclick="toggleCompleted('goal')">顯示 / 隱藏已完成目標</button>
+
+<!-- 獎勵區 -->
 <div id="rewardSection" class="container hidden"></div>
+<div id="rewardRedeemedSection" class="container hidden"></div>
+<button onclick="toggleCompleted('reward')">顯示 / 隱藏已兌換獎勵</button>
 
 <button class="fab" onclick="openForm()">+</button>
 </div>
 
 <script src="app.js"></script>
-<script>
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js");
-}
-</script>
-
 </body>
 </html>
