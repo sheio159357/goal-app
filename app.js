@@ -2,7 +2,7 @@ let currentUser=null
 let currentTab="goal"
 const levelRules=[0,100,300,600,1000]
 
-// 🔹 Storage
+// Storage
 function saveUsers(users){localStorage.setItem("users",JSON.stringify(users))}
 function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
 function getData(){return loadUsers()[currentUser]}
@@ -12,7 +12,7 @@ function setData(data){
   saveUsers(users)
 }
 
-// 🔹 帳號
+// 帳號
 function register(){
   const u=username.value,p=password.value
   let users=loadUsers()
@@ -56,29 +56,27 @@ function resetAccount(){
   render()
 }
 
-// 🔹 每日重置
+// 每日重置
 function dailyReset(){
   let data=getData()
   let today=new Date().toDateString()
   if(data.lastResetDate!==today){
     data.goals.forEach(g=>{
-      if(g.daily && g.completed){
-        g.completed=false
-      }
+      if(g.daily)g.completed=false
     })
     data.lastResetDate=today
     setData(data)
   }
 }
 
-// 🔹 等級
+// 等級
 function getLevel(points){
   let lvl=1
   for(let i=0;i<levelRules.length;i++)if(points>=levelRules[i])lvl=i+1
   return lvl
 }
 
-// 🔹 Render
+// Render
 function render(){
   let data=getData()
   let level=getLevel(data.points)
@@ -86,51 +84,62 @@ function render(){
   let prev=levelRules[level-1]||0
   let percent=((data.points-prev)/(next-prev))*100
 
-  document.getElementById("userInfo").innerHTML=`${currentUser}｜Lv.${level}｜${data.points}點｜${Math.floor(percent)}%`
+  document.getElementById("userInfo").innerHTML=
+    `${currentUser}｜Lv.${level}｜${data.points}點｜${Math.floor(percent)}%`
+
   document.getElementById("levelBar").style.width=percent+"%"
 
   renderGoals()
   renderRewards()
 }
 
-// 🔹 目標
+// 目標
 function renderGoals(){
   let data=getData()
-  let today=new Date().toDateString()
-
-  const active=data.goals.filter(g=>!g.completed)
-  const completed=data.goals.filter(g=>g.completed)
-
-  let el=goalSection
+  let el=document.getElementById("goalSection")
   el.innerHTML=""
 
-  active.forEach(g=>el.appendChild(goalCard(g,false)))
+  const active=data.goals.filter(g=>!g.completed)
+  const done=data.goals.filter(g=>g.completed)
 
-  if(completed.length){
+  active.forEach(g=>{
+    let card=document.createElement("div")
+    card.className="card goal"
+    card.innerHTML=`
+    <div class="goal-left">
+      <input type="checkbox" onclick="toggleGoal('${g.id}')">
+      <span>${g.name} (+${g.points})</span>
+      ${g.daily?'<span class="dot">●</span>':""}
+    </div>
+    <div>
+      <button onclick="deleteGoal('${g.id}')">🗑</button>
+    </div>`
+    card.draggable=true
+    card.ondragstart=e=>e.dataTransfer.setData("id",g.id)
+    card.ondragover=e=>e.preventDefault()
+    card.ondrop=e=>reorderGoal(e,g.id)
+    el.appendChild(card)
+  })
+
+  if(done.length){
     el.appendChild(toggleHeader("已完成目標","completedGoals"))
     const box=document.createElement("div")
     box.id="completedGoals"
     box.classList.add("hidden")
-    completed.forEach(g=>box.appendChild(goalCard(g,true)))
+
+    done.forEach(g=>{
+      let card=document.createElement("div")
+      card.className="card goal redeemed"
+      card.innerHTML=`
+      <div class="goal-left">
+        <input type="checkbox" checked onclick="toggleGoal('${g.id}')">
+        <span>${g.name} (+${g.points})</span>
+      </div>`
+      box.appendChild(card)
+    })
+
     el.appendChild(box)
   }
-}
-
-function goalCard(g,isDone){
-  let card=document.createElement("div")
-  card.className="card goal"
-  card.innerHTML=`
-  <div class="goal-left">
-  <input type="checkbox" ${g.completed?"checked":""} onclick="toggleGoal('${g.id}')">
-  <span>${g.name} (+${g.points})</span>
-  ${g.daily?"●":""}
-  </div>
-  <button onclick="deleteGoal('${g.id}')">🗑</button>`
-  if(!isDone)card.draggable=true
-  card.ondragstart=e=>e.dataTransfer.setData("id",g.id)
-  card.ondragover=e=>e.preventDefault()
-  card.ondrop=e=>reorderGoal(e,g.id)
-  return card
 }
 
 function toggleGoal(id){
@@ -157,45 +166,53 @@ function reorderGoal(e,targetId){
   setData(data);render()
 }
 
-// 🔹 獎勵
+// 獎勵
 function renderRewards(){
   let data=getData()
+  let el=document.getElementById("rewardSection")
+  el.innerHTML=""
+
   const active=data.rewards.filter(r=>!r.redeemed)
   const done=data.rewards.filter(r=>r.redeemed)
 
-  let el=rewardSection
-  el.innerHTML=""
-
-  active.forEach(r=>el.appendChild(rewardCard(r,false)))
+  active.forEach(r=>{
+    let disabled=data.points<r.cost
+    let card=document.createElement("div")
+    card.className="card reward"
+    card.innerHTML=`
+    <div>
+      <button ${disabled?"disabled":""} onclick="toggleRedeem('${r.id}')">兌換</button>
+      ${r.name} (${r.cost})
+    </div>
+    <div>
+      <button onclick="deleteReward('${r.id}')">🗑</button>
+    </div>`
+    card.draggable=true
+    card.ondragstart=e=>e.dataTransfer.setData("id",r.id)
+    card.ondragover=e=>e.preventDefault()
+    card.ondrop=e=>reorderReward(e,r.id)
+    el.appendChild(card)
+  })
 
   if(done.length){
-    el.appendChild(toggleHeader("已兌換獎勵","doneRewards"))
+    el.appendChild(toggleHeader("已兌換獎勵","redeemedRewards"))
     const box=document.createElement("div")
-    box.id="doneRewards"
+    box.id="redeemedRewards"
     box.classList.add("hidden")
-    done.forEach(r=>box.appendChild(rewardCard(r,true)))
+
+    done.forEach(r=>{
+      let card=document.createElement("div")
+      card.className="card reward redeemed"
+      card.innerHTML=`
+      <div>
+        <button onclick="toggleRedeem('${r.id}')">退回</button>
+        ${r.name} (${r.cost})
+      </div>`
+      box.appendChild(card)
+    })
+
     el.appendChild(box)
   }
-}
-
-function rewardCard(r,isDone){
-  let data=getData()
-  let disabled=!isDone && data.points<r.cost
-  let card=document.createElement("div")
-  card.className="card reward"
-  card.innerHTML=`
-  <div class="${isDone?"redeemed":""}">
-  <button ${disabled?"disabled":""} onclick="toggleRedeem('${r.id}')">
-  ${isDone?"退回":"兌換"}
-  </button>
-  ${r.name} (${r.cost})
-  </div>
-  <button onclick="deleteReward('${r.id}')">🗑</button>`
-  if(!isDone)card.draggable=true
-  card.ondragstart=e=>e.dataTransfer.setData("id",r.id)
-  card.ondragover=e=>e.preventDefault()
-  card.ondrop=e=>reorderReward(e,r.id)
-  return card
 }
 
 function toggleRedeem(id){
@@ -228,20 +245,21 @@ function reorderReward(e,targetId){
   setData(data);render()
 }
 
-// 🔹 收合標題
-function toggleHeader(text,id){
+// 收合
+function toggleHeader(text,targetId){
   const btn=document.createElement("div")
-  btn.className="toggle"
+  btn.className="card"
+  btn.style.cursor="pointer"
   btn.innerText="▶ "+text
   btn.onclick=()=>{
-    const box=document.getElementById(id)
+    const box=document.getElementById(targetId)
     box.classList.toggle("hidden")
     btn.innerText=(box.classList.contains("hidden")?"▶ ":"▼ ")+text
   }
   return btn
 }
 
-// 🔹 新增
+// 新增
 function openForm(){
   let name=prompt("名稱")
   if(!name)return
@@ -260,7 +278,7 @@ function openForm(){
   render()
 }
 
-// 🔹 分頁
+// 分頁
 function showTab(tab){
   currentTab=tab
   goalSection.classList.toggle("hidden",tab!=="goal")
@@ -269,7 +287,7 @@ function showTab(tab){
   rewardTab.classList.toggle("active",tab==="reward")
 }
 
-// 🔹 自動登入
+// 自動登入
 window.addEventListener("DOMContentLoaded",()=>{
   const savedUser=localStorage.getItem("currentUser")
   if(savedUser && loadUsers()[savedUser]){
@@ -280,7 +298,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   }
 })
 
-// 🔹 PWA 防快取 SW
+// PWA SW
 if("serviceWorker"in navigator){
   const swCode=`
   self.addEventListener('install',e=>self.skipWaiting())
@@ -291,7 +309,7 @@ if("serviceWorker"in navigator){
   navigator.serviceWorker.register(URL.createObjectURL(blob))
 }
 
-// 🔹 Manifest
+// Manifest
 const manifest={
   name:"Goal Reward App",
   short_name:"Goals",
