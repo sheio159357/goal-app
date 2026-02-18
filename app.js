@@ -26,7 +26,7 @@ function login(){
     if(!users[u] || users[u].password !== p) return alert("登入失敗")
 
     currentUser = u
-    localStorage.setItem("currentUser", u) // 保持登入狀態
+    localStorage.setItem("currentUser", u) // 保持登入
     localStorage.setItem("lastUser", u)    // 記住帳號
 
     document.getElementById("loginPage").classList.add("hidden")
@@ -224,9 +224,9 @@ function openForm(){
 function showTab(tab){
     currentTab=tab
     goalSection.classList.toggle("hidden", tab!=="goal")
-    goalCompletedSection.classList.toggle("hidden", tab!=="goal") // 已完成也跟著隱藏
+    goalCompletedSection.classList.toggle("hidden", tab!=="goal")
     rewardSection.classList.toggle("hidden", tab!=="reward")
-    rewardRedeemedSection.classList.toggle("hidden", tab!=="reward") // 已兌換也跟著隱藏
+    rewardRedeemedSection.classList.toggle("hidden", tab!=="reward")
     goalTab.classList.toggle("active", tab==="goal")
     rewardTab.classList.toggle("active", tab==="reward")
 }
@@ -262,8 +262,16 @@ window.addEventListener("DOMContentLoaded", ()=>{
 // PWA Service Worker
 // ------------------------
 if("serviceWorker" in navigator){
+    const swVersion = "v1-" + new Date().getTime()
     const swCode=`
-    self.addEventListener('install', e=>self.skipWaiting())
+    self.addEventListener('install', e=>{
+        self.skipWaiting()
+        console.log("SW ${swVersion} installed")
+    })
+    self.addEventListener('activate', e=>{
+        self.clients.claim()
+        console.log("SW ${swVersion} activated")
+    })
     self.addEventListener('fetch', e=>{})
     `
     const blob=new Blob([swCode],{type:"text/javascript"})
@@ -276,13 +284,13 @@ if("serviceWorker" in navigator){
 const manifest={
     name:"Goal Reward App",
     short_name:"Goals",
-    start_url:".",
+    start_url:".?v="+new Date().getTime(),
     display:"standalone",
     background_color:"#ffffff",
     theme_color:"#4a90e2",
     icons:[
-        {src:"icon-192.png",sizes:"192x192",type:"image/png"},
-        {src:"icon-512.png",sizes:"512x512",type:"image/png"}
+        {src:"icon-192.png?v="+new Date().getTime(),sizes:"192x192",type:"image/png"},
+        {src:"icon-512.png?v="+new Date().getTime(),sizes:"512x512",type:"image/png"}
     ]
 }
 const manifestBlob=new Blob([JSON.stringify(manifest)],{type:"application/json"})
