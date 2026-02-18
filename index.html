@@ -66,8 +66,13 @@ input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #c
 <button onclick="toggleCompleted('reward')">顯示 / 隱藏已兌換獎勵</button>
 
 <button class="fab" onclick="openForm()">+</button>
-</div>
 
-<script src="app.js"></script>
+<script>
+  // 強制載入最新 app.js，避免快取
+  const script = document.createElement("script");
+  script.src = "app.js?v=" + new Date().getTime();
+  document.body.appendChild(script);
+</script>
+
 </body>
 </html>
