@@ -1,0 +1,16 @@
+body{font-family:sans-serif;margin:0;background:#f2f4f8}
+.hidden{display:none}
+.header{background:#fff;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.tabs{display:flex}
+.tab{flex:1;padding:12px;text-align:center;cursor:pointer}
+.tab.active{font-weight:bold;border-bottom:3px solid #4a90e2}
+.container{padding:12px}
+.card{background:#fff;padding:12px;margin-bottom:10px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:space-between}
+.goal{border-left:6px solid #4a90e2}
+.reward{border-left:6px solid #9b59b6}
+button{border:none;border-radius:8px;padding:6px 10px;margin-left:6px}
+.fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:#4a90e2;color:#fff;font-size:28px}
+.progress{height:10px;background:#ddd;border-radius:6px;margin-top:6px}
+.progress-bar{height:10px;background:#4a90e2;border-radius:6px;width:0%}
+input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc}
+.redeemed{opacity:0.6;text-decoration:line-through}
