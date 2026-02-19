@@ -6,6 +6,21 @@ function getLevel(points){
   return Math.floor(points/100)+1
 }
 
+// ===== 新增函式 =====
+function getBadge(level){
+  if(level>=100) return "👑"
+  if(level>=90) return "⚙️"
+  if(level>=80) return "⛰️"
+  if(level>=70) return "🎯"
+  if(level>=60) return "⚡"
+  if(level>=50) return "⬆️"
+  if(level>=40) return "🔥"
+  if(level>=30) return "🔗"
+  if(level>=20) return "👣"
+  if(level>=10) return "🧭"
+  return "🌱"
+}
+
 // 稱謂系統
 function getTitle(level){
   if(level>=100) return "傳奇實踐者"
@@ -114,13 +129,14 @@ function renderHeader(){
   let data=getData()
   let level=getLevel(data.points)
   let title=getTitle(level)
+  let badge=getBadge(level)
 
   // 當前等級區間進度
   let prev=(level-1)*100
   let next=level*100
   let percent=((data.points-prev)/100)*100
 
-  userInfo.innerHTML=`${currentUser}｜${title} Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
+  userInfo.innerHTML=`${currentUser}｜${badge} ${title} Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
   levelBar.style.width=percent+"%"
 }
 
