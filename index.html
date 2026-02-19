@@ -1,63 +1,68 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Goal App</title>
-<link rel="manifest" href="manifest.json">
-</head>
+<title>Goal Reward PWA</title>
 
+<link rel="manifest" href="manifest.json">
+
+<style>
+body{font-family:sans-serif;margin:0;background:#f2f4f8}
+.hidden{display:none}
+.header{background:#fff;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.tabs{display:flex}
+.tab{flex:1;padding:12px;text-align:center;cursor:pointer}
+.tab.active{font-weight:bold;border-bottom:3px solid #4a90e2}
+.container{padding:12px}
+.card{background:#fff;padding:12px;margin-bottom:10px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:space-between}
+.goal{border-left:6px solid #4a90e2}
+.reward{border-left:6px solid #9b59b6}
+button{border:none;border-radius:8px;padding:6px 10px;margin-left:6px}
+.fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:#4a90e2;color:#fff;font-size:28px}
+.progress{height:10px;background:#ddd;border-radius:6px;margin-top:6px}
+.progress-bar{height:10px;background:#4a90e2;border-radius:6px;width:0%}
+input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc}
+.goal-left{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{color:#e74c3c;font-size:18px}
+.redeemed{opacity:0.6;text-decoration:line-through}
+.top-buttons{margin-top:6px}
+.toggle-header{cursor:pointer;font-weight:bold}
+</style>
+</head>
 <body>
 
-<h2>🎯 目標管理</h2>
-
-<div>
-  <button onclick="showTab('goals')">目標</button>
-  <button onclick="showTab('rewards')">獎勵</button>
-  <button onclick="logout()">登出</button>
+<!-- 登入頁 -->
+<div id="loginPage" class="container hidden">
+<h2>登入 / 註冊</h2>
+<input id="username" placeholder="帳號">
+<input id="password" type="password" placeholder="密碼">
+<button onclick="login()">登入</button>
+<button onclick="register()">註冊</button>
 </div>
 
-<hr>
+<!-- 主頁 -->
+<div id="appPage" class="hidden">
 
-<!-- 等級顯示 -->
-<div id="levelBox">
-  <h3 id="levelText">等級 Lv.1</h3>
-  <p id="titleText">新手學徒</p>
-  <p id="pointText">0 / 100</p>
+<div class="header">
+<div id="userInfo"></div>
+<div class="progress"><div id="levelBar" class="progress-bar"></div></div>
+<div class="top-buttons">
+<button onclick="showLogin()">登入</button>
+<button onclick="resetAccount()">重設</button>
+<button onclick="logout()">登出</button>
+</div>
 </div>
 
-<hr>
-
-<!-- 目標頁 -->
-<div id="goalsTab">
-
-<h3>新增目標</h3>
-<input id="goalInput" placeholder="輸入目標">
-<input id="goalPoint" type="number" placeholder="點數">
-<button onclick="addGoal()">新增</button>
-
-<h3>目標列表</h3>
-<ul id="goalList"></ul>
-
-<button onclick="toggleCompleted('goal')">顯示/隱藏 已完成目標</button>
-<ul id="completedGoalList" style="display:none;"></ul>
-
+<div class="tabs">
+<div id="goalTab" class="tab active" onclick="showTab('goal')">目標</div>
+<div id="rewardTab" class="tab" onclick="showTab('reward')">獎勵</div>
 </div>
 
-<!-- 獎勵頁 -->
-<div id="rewardsTab" style="display:none;">
+<div id="goalSection" class="container"></div>
+<div id="rewardSection" class="container hidden"></div>
 
-<h3>新增獎勵</h3>
-<input id="rewardInput" placeholder="輸入獎勵">
-<input id="rewardCost" type="number" placeholder="需要點數">
-<button onclick="addReward()">新增</button>
-
-<h3>獎勵列表</h3>
-<ul id="rewardList"></ul>
-
-<button onclick="toggleCompleted('reward')">顯示/隱藏 已兌換獎勵</button>
-<ul id="completedRewardList" style="display:none;"></ul>
-
+<button class="fab" onclick="openForm()">+</button>
 </div>
 
 <script src="app.js"></script>
