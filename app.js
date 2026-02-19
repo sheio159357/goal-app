@@ -1,293 +1,202 @@
-let currentUser=null
-let currentTab="goal"
-const levelRules=[0,100,300,600,1000]
-
-function saveUsers(users){localStorage.setItem("users",JSON.stringify(users))}
-function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
-
-function getData(){return loadUsers()[currentUser]}
-function setData(data){
-  let users=loadUsers()
-  users[currentUser]=data
-  saveUsers(users)
+let currentUser = localStorage.getItem("currentUser")
+if (!currentUser) {
+  currentUser = "guest"
+  localStorage.setItem("currentUser", currentUser)
 }
 
-document.addEventListener("DOMContentLoaded",initApp)
+function loadData() {
+  return JSON.parse(localStorage.getItem(currentUser) || '{"goals":[],"rewards":[],"points":0}')
+}
 
-function initApp(){
-  const savedUser=localStorage.getItem("currentUser")
-  const users=loadUsers()
-  if(savedUser && users[savedUser]){
-    currentUser=savedUser
-    showApp()
-  }else{
-    showLogin()
+function saveData(data) {
+  localStorage.setItem(currentUser, JSON.stringify(data))
+}
+
+/* ========= 等級系統 ========= */
+
+function getLevel(points) {
+  return Math.floor(points / 100) + 1
+}
+
+function getTitle(level) {
+  if (level >= 100) return "傳奇實踐者"
+  if (level >= 90) return "系統化達人"
+  if (level >= 80) return "巔峰行動者"
+  if (level >= 70) return "目標掌控者"
+  if (level >= 60) return "高效實踐者"
+  if (level >= 50) return "成長推進者"
+  if (level >= 40) return "自律挑戰者"
+  if (level >= 30) return "習慣建立者"
+  if (level >= 20) return "行動執行者"
+  if (level >= 10) return "目標探索者"
+  return "新手學徒"
+}
+
+function updateLevelUI() {
+  const data = loadData()
+  const level = getLevel(data.points)
+  const title = getTitle(level)
+  const current = data.points % 100
+  const need = 100
+
+  document.getElementById("levelText").innerText = `等級 Lv.${level}`
+  document.getElementById("titleText").innerText = title
+  document.getElementById("pointText").innerText = `${current} / ${need}`
+}
+
+/* ========= 分頁 ========= */
+
+function showTab(tab) {
+  document.getElementById("goalsTab").style.display = tab === "goals" ? "block" : "none"
+  document.getElementById("rewardsTab").style.display = tab === "rewards" ? "block" : "none"
+}
+
+/* ========= 目標 ========= */
+
+function addGoal() {
+  const text = document.getElementById("goalInput").value
+  const point = parseInt(document.getElementById("goalPoint").value)
+
+  if (!text || !point) return
+
+  const data = loadData()
+  data.goals.push({ text, point, done: false, date: new Date().toDateString() })
+  saveData(data)
+
+  document.getElementById("goalInput").value = ""
+  document.getElementById("goalPoint").value = ""
+
+  renderGoals()
+}
+
+function completeGoal(index) {
+  const data = loadData()
+  if (data.goals[index].done) return
+
+  data.goals[index].done = true
+  data.points += data.goals[index].point
+
+  saveData(data)
+  renderGoals()
+  updateLevelUI()
+}
+
+function renderGoals() {
+  const data = loadData()
+  const goalList = document.getElementById("goalList")
+  const completedList = document.getElementById("completedGoalList")
+
+  goalList.innerHTML = ""
+  completedList.innerHTML = ""
+
+  const today = new Date().toDateString()
+
+  data.goals.forEach((g, i) => {
+    const li = document.createElement("li")
+    li.innerText = `${g.text} (+${g.point})`
+
+    if (!g.done) {
+      const btn = document.createElement("button")
+      btn.innerText = "完成"
+      btn.onclick = () => completeGoal(i)
+      li.appendChild(btn)
+      goalList.appendChild(li)
+    } else {
+      if (g.date !== today) {
+        completedList.appendChild(li)
+      } else {
+        goalList.appendChild(li)
+      }
+    }
+  })
+}
+
+/* ========= 獎勵 ========= */
+
+function addReward() {
+  const text = document.getElementById("rewardInput").value
+  const cost = parseInt(document.getElementById("rewardCost").value)
+
+  if (!text || !cost) return
+
+  const data = loadData()
+  data.rewards.push({ text, cost, done: false, date: new Date().toDateString() })
+  saveData(data)
+
+  document.getElementById("rewardInput").value = ""
+  document.getElementById("rewardCost").value = ""
+
+  renderRewards()
+}
+
+function redeemReward(index) {
+  const data = loadData()
+  const reward = data.rewards[index]
+
+  if (data.points < reward.cost) {
+    alert("點數不足")
+    return
+  }
+
+  reward.done = true
+  data.points -= reward.cost
+
+  saveData(data)
+  renderRewards()
+  updateLevelUI()
+}
+
+function renderRewards() {
+  const data = loadData()
+  const rewardList = document.getElementById("rewardList")
+  const completedList = document.getElementById("completedRewardList")
+
+  rewardList.innerHTML = ""
+  completedList.innerHTML = ""
+
+  const today = new Date().toDateString()
+
+  data.rewards.forEach((r, i) => {
+    const li = document.createElement("li")
+    li.innerText = `${r.text} (-${r.cost})`
+
+    if (!r.done) {
+      const btn = document.createElement("button")
+      btn.innerText = "兌換"
+      btn.onclick = () => redeemReward(i)
+      li.appendChild(btn)
+      rewardList.appendChild(li)
+    } else {
+      if (r.date !== today) {
+        completedList.appendChild(li)
+      } else {
+        rewardList.appendChild(li)
+      }
+    }
+  })
+}
+
+/* ========= 隱藏/顯示 ========= */
+
+function toggleCompleted(type) {
+  if (type === "goal") {
+    const el = document.getElementById("completedGoalList")
+    el.style.display = el.style.display === "none" ? "block" : "none"
+  } else {
+    const el = document.getElementById("completedRewardList")
+    el.style.display = el.style.display === "none" ? "block" : "none"
   }
 }
 
-function showLogin(){
-  loginPage.classList.remove("hidden")
-  appPage.classList.add("hidden")
-}
+/* ========= 登出 ========= */
 
-function showApp(){
-  loginPage.classList.add("hidden")
-  appPage.classList.remove("hidden")
-  dailyReset()
-  renderAll()
-}
-
-function register(){
-  const u=username.value.trim()
-  const p=password.value.trim()
-  if(!u||!p)return alert("請輸入帳密")
-
-  let users=loadUsers()
-  if(users[u])return alert("帳號已存在")
-
-  users[u]={password:p,points:0,goals:[],rewards:[],lastResetDate:""}
-  saveUsers(users)
-  alert("註冊成功")
-}
-
-function login(){
-  const u=username.value.trim()
-  const p=password.value.trim()
-  let users=loadUsers()
-
-  if(!users[u]||users[u].password!==p)return alert("登入失敗")
-
-  currentUser=u
-  localStorage.setItem("currentUser",u)
-  showApp()
-}
-
-function logout(){
+function logout() {
   localStorage.removeItem("currentUser")
   location.reload()
 }
 
-function resetAccount(){
-  if(!confirm("確定重設帳號？所有資料將清除"))return
-  let users=loadUsers()
-  users[currentUser]={password:users[currentUser].password,points:0,goals:[],rewards:[],lastResetDate:""}
-  saveUsers(users)
-  renderAll()
-}
+/* ========= 初始化 ========= */
 
-function dailyReset(){
-  let data=getData()
-  let today=new Date().toDateString()
-  if(data.lastResetDate!==today){
-    data.goals.forEach(g=>{if(g.daily)g.completed=false})
-    data.lastResetDate=today
-    setData(data)
-  }
-}
-
-function getLevel(points){
-  let lvl=1
-  for(let i=0;i<levelRules.length;i++)if(points>=levelRules[i])lvl=i+1
-  return lvl
-}
-
-function renderAll(){
-  renderHeader()
-  renderGoals()
-  renderRewards()
-}
-
-function renderHeader(){
-  let data=getData()
-  let level=getLevel(data.points)
-  let next=levelRules[level]||levelRules[levelRules.length-1]
-  let prev=levelRules[level-1]||0
-  let percent=((data.points-prev)/(next-prev))*100
-
-  userInfo.innerHTML=`${currentUser}｜Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
-  levelBar.style.width=percent+"%"
-}
-
-function renderGoals(){
-  let data=getData()
-  let el=goalSection
-  el.innerHTML=""
-
-  const active=data.goals.filter(g=>!g.completed)
-  const done=data.goals.filter(g=>g.completed)
-
-  active.forEach(g=>{
-    let card=document.createElement("div")
-    card.className="card goal"
-    card.innerHTML=`
-    <div class="goal-left">
-      <input type="checkbox" onclick="toggleGoal('${g.id}')">
-      <span>${g.name} (+${g.points})</span>
-      ${g.daily?'<span class="dot">●</span>':""}
-    </div>
-    <div><button onclick="deleteGoal('${g.id}')">🗑</button></div>`
-    makeDraggable(card,g.id,"goal")
-    el.appendChild(card)
-  })
-
-  if(done.length){
-    el.appendChild(createToggleHeader("已完成目標","completedGoals"))
-    const box=document.createElement("div")
-    box.id="completedGoals"
-    box.classList.add("hidden")
-
-    done.forEach(g=>{
-      let card=document.createElement("div")
-      card.className="card goal redeemed"
-      card.innerHTML=`
-      <div class="goal-left">
-        <input type="checkbox" checked onclick="toggleGoal('${g.id}')">
-        <span>${g.name} (+${g.points})</span>
-      </div>`
-      box.appendChild(card)
-    })
-    el.appendChild(box)
-  }
-}
-
-function renderRewards(){
-  let data=getData()
-  let el=rewardSection
-  el.innerHTML=""
-
-  const active=data.rewards.filter(r=>!r.redeemed)
-  const done=data.rewards.filter(r=>r.redeemed)
-
-  active.forEach(r=>{
-    let disabled=data.points<r.cost
-    let card=document.createElement("div")
-    card.className="card reward"
-    card.innerHTML=`
-    <div>
-      <button ${disabled?"disabled":""} onclick="toggleRedeem('${r.id}')">兌換</button>
-      ${r.name} (${r.cost})
-    </div>
-    <div><button onclick="deleteReward('${r.id}')">🗑</button></div>`
-    makeDraggable(card,r.id,"reward")
-    el.appendChild(card)
-  })
-
-  if(done.length){
-    el.appendChild(createToggleHeader("已兌換獎勵","redeemedRewards"))
-    const box=document.createElement("div")
-    box.id="redeemedRewards"
-    box.classList.add("hidden")
-
-    done.forEach(r=>{
-      let card=document.createElement("div")
-      card.className="card reward redeemed"
-      card.innerHTML=`
-      <div>
-        <button onclick="toggleRedeem('${r.id}')">退回</button>
-        ${r.name} (${r.cost})
-      </div>`
-      box.appendChild(card)
-    })
-    el.appendChild(box)
-  }
-}
-
-function createToggleHeader(text,targetId){
-  const btn=document.createElement("div")
-  btn.className="card toggle-header"
-  btn.innerText="▶ "+text
-  btn.onclick=()=>{
-    const box=document.getElementById(targetId)
-    box.classList.toggle("hidden")
-    btn.innerText=(box.classList.contains("hidden")?"▶ ":"▼ ")+text
-  }
-  return btn
-}
-
-function toggleGoal(id){
-  let data=getData()
-  let g=data.goals.find(x=>x.id===id)
-  if(!g.completed){data.points+=g.points}else{data.points-=g.points}
-  g.completed=!g.completed
-  setData(data)
-  renderAll()
-}
-
-function toggleRedeem(id){
-  let data=getData()
-  let r=data.rewards.find(x=>x.id===id)
-  if(!r.redeemed){
-    if(data.points<r.cost)return
-    data.points-=r.cost
-    r.redeemed=true
-  }else{
-    data.points+=r.cost
-    r.redeemed=false
-  }
-  setData(data)
-  renderAll()
-}
-
-function deleteGoal(id){
-  let data=getData()
-  let g=data.goals.find(x=>x.id===id)
-  if(g.completed)return alert("已完成目標不可刪除")
-  data.goals=data.goals.filter(x=>x.id!==id)
-  setData(data)
-  renderAll()
-}
-
-function deleteReward(id){
-  let data=getData()
-  data.rewards=data.rewards.filter(x=>x.id!==id)
-  setData(data)
-  renderAll()
-}
-
-function makeDraggable(card,id,type){
-  card.draggable=true
-  card.ondragstart=e=>e.dataTransfer.setData("id",id)
-  card.ondragover=e=>e.preventDefault()
-  card.ondrop=e=>{
-    e.preventDefault()
-    const dragId=e.dataTransfer.getData("id")
-    reorder(type,dragId,id)
-  }
-}
-
-function reorder(type,dragId,targetId){
-  let data=getData()
-  let list=type==="goal"?data.goals:data.rewards
-  const from=list.findIndex(x=>x.id===dragId)
-  const to=list.findIndex(x=>x.id===targetId)
-  list.splice(to,0,list.splice(from,1)[0])
-  setData(data)
-  renderAll()
-}
-
-function openForm(){
-  let name=prompt("名稱")
-  if(!name)return
-
-  if(currentTab==="goal"){
-    let points=parseInt(prompt("完成可得點數"))||10
-    let daily=confirm("每日重複？")
-    let data=getData()
-    data.goals.push({id:Date.now()+"",name,daily,completed:false,points})
-    setData(data)
-  }else{
-    let cost=parseInt(prompt("所需點數"))
-    let data=getData()
-    data.rewards.push({id:Date.now()+"",name,cost,redeemed:false})
-    setData(data)
-  }
-  renderAll()
-}
-
-function showTab(tab){
-  currentTab=tab
-  goalSection.classList.toggle("hidden",tab!=="goal")
-  rewardSection.classList.toggle("hidden",tab!=="reward")
-  goalTab.classList.toggle("active",tab==="goal")
-  rewardTab.classList.toggle("active",tab==="reward")
-}
+renderGoals()
+renderRewards()
+updateLevelUI()
