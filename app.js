@@ -21,21 +21,6 @@ function getTitle(level){
   return "新手學徒"
 }
 
-function getLevelColor(level){
-  if(level>=100) return "#FFD700" // 金
-  if(level>=90) return "#FF4FA3"
-  if(level>=80) return "#8E44AD"
-  if(level>=70) return "#E74C3C"
-  if(level>=60) return "#E67E22"
-  if(level>=50) return "#F1C40F"
-  if(level>=40) return "#9ACD32"
-  if(level>=30) return "#2ECC71"
-  if(level>=20) return "#1ABC9C"
-  if(level>=10) return "#3498DB"
-  return "#95A5A6"
-}
-
-
 function saveUsers(users){localStorage.setItem("users",JSON.stringify(users))}
 function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
 
@@ -138,9 +123,6 @@ function renderHeader(){
   userInfo.innerHTML=`${currentUser}｜${title} Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
   levelBar.style.width=percent+"%"
 }
-  const color=getLevelColor(level)
-  document.documentElement.style.setProperty("--levelColor", color)
-  document.body.dataset.maxLevel = level>=100 ? "true" : "false"
 
 function renderGoals(){
   let data=getData()
@@ -153,10 +135,6 @@ function renderGoals(){
   active.forEach(g=>{
     let card=document.createElement("div")
     card.className="card goal"
-    card.style.borderLeftColor="var(--levelColor)"
-    if(document.body.dataset.maxLevel==="true"){
-    card.classList.add("max-level")
-    }
     card.innerHTML=`
     <div class="goal-left">
       <input type="checkbox" onclick="toggleGoal('${g.id}')">
@@ -200,10 +178,6 @@ function renderRewards(){
     let disabled=data.points<r.cost
     let card=document.createElement("div")
     card.className="card reward"
-    card.style.borderLeftColor="var(--levelColor)"
-    if(document.body.dataset.maxLevel==="true"){
-    card.classList.add("max-level")
-    }
     card.innerHTML=`
     <div>
       <button ${disabled?"disabled":""} onclick="toggleRedeem('${r.id}')">兌換</button>
