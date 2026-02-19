@@ -1,6 +1,25 @@
 let currentUser=null
 let currentTab="goal"
-const levelRules=[0,100,300,600,1000]
+
+// 每100點升一級
+function getLevel(points){
+  return Math.floor(points/100)+1
+}
+
+// 稱謂系統
+function getTitle(level){
+  if(level>=100) return "傳奇實踐者"
+  if(level>=90) return "系統化達人"
+  if(level>=80) return "巔峰行動者"
+  if(level>=70) return "目標掌控者"
+  if(level>=60) return "高效實踐者"
+  if(level>=50) return "成長推進者"
+  if(level>=40) return "自律挑戰者"
+  if(level>=30) return "習慣建立者"
+  if(level>=20) return "行動執行者"
+  if(level>=10) return "目標探索者"
+  return "新手學徒"
+}
 
 function saveUsers(users){localStorage.setItem("users",JSON.stringify(users))}
 function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
@@ -85,12 +104,6 @@ function dailyReset(){
   }
 }
 
-function getLevel(points){
-  let lvl=1
-  for(let i=0;i<levelRules.length;i++)if(points>=levelRules[i])lvl=i+1
-  return lvl
-}
-
 function renderAll(){
   renderHeader()
   renderGoals()
@@ -100,11 +113,14 @@ function renderAll(){
 function renderHeader(){
   let data=getData()
   let level=getLevel(data.points)
-  let next=levelRules[level]||levelRules[levelRules.length-1]
-  let prev=levelRules[level-1]||0
-  let percent=((data.points-prev)/(next-prev))*100
+  let title=getTitle(level)
 
-  userInfo.innerHTML=`${currentUser}｜Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
+  // 當前等級區間進度
+  let prev=(level-1)*100
+  let next=level*100
+  let percent=((data.points-prev)/100)*100
+
+  userInfo.innerHTML=`${currentUser}｜${title} Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
   levelBar.style.width=percent+"%"
 }
 
