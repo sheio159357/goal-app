@@ -147,7 +147,7 @@ function dailyReset(){
 }
 
 function renderAll(){
-  
+  renderHeader()
   renderGoals()
   renderRewards()
 }
