@@ -168,7 +168,7 @@ function renderHeader(){
 
   userInfo.innerHTML=`
     <div style="text-align:center; line-height:1.4;">
-      <div>${currentUser}｜${badge} ${title} Lv.${level}｜</div>
+      <div>${currentUser}｜${badge} ${title} Lv.${level}</div>
       <div>EXP ${data.exp} (${percentText}%)｜P ${data.points}</div>
     </div>
   `
