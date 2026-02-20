@@ -147,7 +147,7 @@ function dailyReset(){
 }
 
 function renderAll(){
-  renderHeader()
+  
   renderGoals()
   renderRewards()
 }
@@ -162,7 +162,14 @@ function renderHeader(){
   let percent=((data.exp-prev)/100)*100
   let percentText=Math.floor(percent)
 
-  userInfo.innerHTML=`${currentUser}｜${badge} ${title} Lv.${level}｜EXP ${data.exp} (${percentText}%)｜P ${data.points}`
+  userInfo.innerHTML=`
+    <div style="text-align:center;">
+      ${currentUser}｜${badge} ${title} Lv.${level}｜
+      <br>
+      EXP ${data.exp} (${percentText}%)｜P ${data.points}
+    </div>
+  `
+
   levelBar.style.width=percent+"%"
 }
 
