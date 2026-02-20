@@ -1,12 +1,12 @@
 let currentUser=null
 let currentTab="goal"
 
-// 每100點升一級
-function getLevel(points){
-  return Math.floor(points/100)+1
+// 每100經驗升一級（用 exp）
+function getLevel(exp){
+  return Math.floor(exp/100)+1
 }
 
-// ===== 新增函式 =====
+// ===== 徽章 =====
 function getBadge(level){
   if(level>=100) return "👑"
   if(level>=90) return "⚙️"
@@ -21,7 +21,7 @@ function getBadge(level){
   return "🌱"
 }
 
-// 稱謂系統
+// ===== 稱謂 =====
 function getTitle(level){
   if(level>=100) return "傳奇實踐者"
   if(level>=90) return "系統化達人"
@@ -39,7 +39,17 @@ function getTitle(level){
 function saveUsers(users){localStorage.setItem("users",JSON.stringify(users))}
 function loadUsers(){return JSON.parse(localStorage.getItem("users")||"{}")}
 
-function getData(){return loadUsers()[currentUser]}
+function getData(){
+  let data=loadUsers()[currentUser]
+
+  // ⭐ 舊帳號自動補 exp
+  if(data.exp===undefined){
+    data.exp=data.points||0
+  }
+
+  return data
+}
+
 function setData(data){
   let users=loadUsers()
   users[currentUser]=data
@@ -79,7 +89,15 @@ function register(){
   let users=loadUsers()
   if(users[u])return alert("帳號已存在")
 
-  users[u]={password:p,points:0,goals:[],rewards:[],lastResetDate:""}
+  users[u]={
+    password:p,
+    points:0,   // 可用點數
+    exp:0,      // ⭐ 累積經驗
+    goals:[],
+    rewards:[],
+    lastResetDate:""
+  }
+
   saveUsers(users)
   alert("註冊成功")
 }
@@ -104,7 +122,16 @@ function logout(){
 function resetAccount(){
   if(!confirm("確定重設帳號？所有資料將清除"))return
   let users=loadUsers()
-  users[currentUser]={password:users[currentUser].password,points:0,goals:[],rewards:[],lastResetDate:""}
+
+  users[currentUser]={
+    password:users[currentUser].password,
+    points:0,
+    exp:0,
+    goals:[],
+    rewards:[],
+    lastResetDate:""
+  }
+
   saveUsers(users)
   renderAll()
 }
@@ -127,16 +154,15 @@ function renderAll(){
 
 function renderHeader(){
   let data=getData()
-  let level=getLevel(data.points)
+  let level=getLevel(data.exp)
   let title=getTitle(level)
   let badge=getBadge(level)
 
-  // 當前等級區間進度
   let prev=(level-1)*100
-  let next=level*100
-  let percent=((data.points-prev)/100)*100
+  let percent=((data.exp-prev)/100)*100
+  let percentText=Math.floor(percent)
 
-  userInfo.innerHTML=`${currentUser}｜${badge} ${title} Lv.${level}｜${data.points}點 (${Math.floor(percent)}%)`
+  userInfo.innerHTML=`${currentUser}｜${badge} ${title} Lv.${level}｜EXP ${data.exp} (${percentText}%)｜P ${data.points}`
   levelBar.style.width=percent+"%"
 }
 
@@ -236,18 +262,29 @@ function createToggleHeader(text,targetId){
   return btn
 }
 
+// ⭐ 完成目標：加 exp + points
 function toggleGoal(id){
   let data=getData()
   let g=data.goals.find(x=>x.id===id)
-  if(!g.completed){data.points+=g.points}else{data.points-=g.points}
+
+  if(!g.completed){
+    data.points+=g.points
+    data.exp+=g.points
+  }else{
+    data.points-=g.points
+    data.exp-=g.points
+  }
+
   g.completed=!g.completed
   setData(data)
   renderAll()
 }
 
+// ⭐ 兌換只扣 points，不動 exp
 function toggleRedeem(id){
   let data=getData()
   let r=data.rewards.find(x=>x.id===id)
+
   if(!r.redeemed){
     if(data.points<r.cost)return
     data.points-=r.cost
@@ -256,6 +293,7 @@ function toggleRedeem(id){
     data.points+=r.cost
     r.redeemed=false
   }
+
   setData(data)
   renderAll()
 }
