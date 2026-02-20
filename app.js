@@ -1,3 +1,4 @@
+let userInfo, levelBar
 let currentUser=null
 let currentTab="goal"
 
@@ -59,6 +60,9 @@ function setData(data){
 document.addEventListener("DOMContentLoaded",initApp)
 
 function initApp(){
+  userInfo = document.getElementById("userInfo")
+  levelBar = document.getElementById("levelBar")
+  
   const savedUser=localStorage.getItem("currentUser")
   const users=loadUsers()
   if(savedUser && users[savedUser]){
